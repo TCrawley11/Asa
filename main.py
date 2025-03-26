@@ -1,6 +1,7 @@
 import os
 
 from groq import Groq
+from agents import Agent, Runner
 
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
@@ -9,8 +10,8 @@ client = Groq(
 def AsaCLI():
     messages = []
 
-    print("Asa, the groq-powered assistant.")
-    print("================================")
+    print("Asa, the groq-powered scheduling assistant.")
+    print("===========================================")
 
     while True:
         u_input = input("What Can I help with?").strip()
@@ -28,9 +29,9 @@ def AsaCLI():
             )
 
             response = chat_completion.choices[0].message.content
-            print(f"/nAsa: {response}")
+            print(f"🤖 Asa: {response}")
 
-            messages.append({"role": "assitant", "content": response})
+            messages.append({"role": "assistant", "content": response})
 
         except Exception as e:
             print(f"Error: {str(e)}")
