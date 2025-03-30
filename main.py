@@ -2,6 +2,23 @@ import os
 
 from groq import Groq
 from agents import Agent, Runner
+import datetime
+import os.path
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+from qdrant_client import QdrantClient
+
+qdrant_client = QdrantClient(
+    url="https://f3bced16-fc99-456d-80d6-ca95d259c351.us-east-1-0.aws.cloud.qdrant.io:6333", 
+    api_key=os.environ.get("QDRANT_API_KEY"),
+)
+
+print(qdrant_client.get_collections())
 
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
@@ -25,7 +42,7 @@ def AsaCLI():
         try :
             chat_completion = client.chat.completions.create(
                 messages = messages,
-                model="llama-3.3-70b-versatile",
+                model="deepseek-r1-distill-llama-70b",
             )
 
             response = chat_completion.choices[0].message.content
