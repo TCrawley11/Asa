@@ -10,7 +10,6 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
-
 def main():
   """Shows basic usage of the Google Calendar API.
   Prints the start and name of the next 10 events on the user's calendar.
@@ -27,9 +26,9 @@ def main():
       creds.refresh(Request())
     else:
       flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
+          os.path("credentials.json"), SCOPES
       )
-      creds = flow.run_local_server(port=0)
+      creds = flow.run_local_server(port=8080)
     # Save the credentials for the next run
     with open("token.json", "w") as token:
       token.write(creds.to_json())
