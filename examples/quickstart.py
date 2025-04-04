@@ -19,7 +19,8 @@ CREDENTIALS_PATH = PROJECT_ROOT / "data" / "credentials.json"
 (PROJECT_ROOT / "data").mkdir(exist_ok=True)
 
 def main():
-  """Shows basic usage of the Google Calendar API.
+  """
+  Shows basic usage of the Google Calendar API.
   Prints the start and name of the next 10 events on the user's calendar.
   """
   creds = None
@@ -45,7 +46,7 @@ def main():
     service = build("calendar", "v3", credentials=creds)
 
     # Call the Calendar API
-    now = datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"  # 'Z' indicates UTC time
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat() # remove 'Z' to avoid timezone issues
     print("Getting the upcoming 10 events")
     events_result = (
         service.events()
