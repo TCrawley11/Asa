@@ -13,6 +13,10 @@ from googleapiclient.errors import HttpError
 
 from qdrant_client import QdrantClient
 
+# Import the google calendar service and create an instance of it
+from services.calendar_service import CalendarService
+calendar = CalendarService()
+
 qdrant_client = QdrantClient(
     url="https://f3bced16-fc99-456d-80d6-ca95d259c351.us-east-1-0.aws.cloud.qdrant.io:6333", 
     api_key=os.environ.get("QDRANT_API_KEY"),
@@ -27,7 +31,7 @@ client = Groq(
 def AsaCLI():
     messages = []
 
-    print("Asa, the groq-powered scheduling assistant.")
+    print("Hello! I'm Asa, your personal scheduling assistant.")
     print("===========================================")
 
     while True:
@@ -42,7 +46,7 @@ def AsaCLI():
         try :
             chat_completion = client.chat.completions.create(
                 messages = messages,
-                model="deepseek-r1-distill-llama-70b",
+                model="llama-3.3-70b-versatile",
             )
 
             response = chat_completion.choices[0].message.content
