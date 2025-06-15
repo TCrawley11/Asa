@@ -26,14 +26,17 @@ load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 
 
-# will change this later to vector store so that it is multi conversational
 @dataclass
 class ChatContext:
-    history: list
+    history: list[str]
 
 
+# get the run context
 @function_tool
-async def fetch_conversation_history(wrapper: RunContextWrapper[ChatContext]) -> list:
+async def fetch_conversation_history(
+    wrapper: RunContextWrapper[ChatContext],
+) -> list[str]:
+    print("getting conversation history")
     return wrapper.context.history
 
 
@@ -47,28 +50,38 @@ async def run(mcp_server: MCPServer):
         "in a clear and concise manner. You should also provide insights as"
         "to how best complete said tasks. You are also responsible for"
         "adding and removing tasks from the users schedule when prompted by"
-        "interacting with the provided google calendar tools.",
+        "interacting with the provided google calendar tools. When queries"
+        "reference or require past queries, use the fetch_conversation_history tool",
         model="gpt-4.1-nano",
-        tools=[fetch_conversation_history],
+        tools=[
+            fetch_conversation_history,
+        ],
         mcp_servers=[mcp_server],
         model_settings=ModelSettings(tool_choice="required"),
     )
 
     # send notifications to the user through email and SMS
-    notification_agent = Agent(name="noti_asa", instructions="", model="gpt-4.1-nano")
+    notification_agent = Agent(
+        name="noti_asa", instructions="", model="gpt-4.1-nano")
 
-    context = ChatContext(history=[])
+    chat_history_list = []
+
     while True:
         user_input = input("Schedule anything...\n")
         if user_input in ("exit", "goodbye"):
             print("Goodbye!")
             break
-        context.history.append(user_input)
+        chat_history_list.append(user_input)
+
+        chat_context = ChatContext(history=chat_history_list)
 
         result = await Runner.run(
-            starting_agent=planner_agent, input=user_input, context=context
+            starting_agent=planner_agent,
+            input=user_input,
+            context=chat_context,
         )
 
+        print(chat_context)
         print(result.final_output)
         result.to_input_list()
 
