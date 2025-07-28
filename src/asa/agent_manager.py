@@ -19,18 +19,20 @@ from dotenv import load_dotenv
 from agents.mcp import MCPServer, MCPServerStreamableHttp
 from agents.model_settings import ModelSettings
 
-
 # get the API key from the .env file
 load_dotenv()
-
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT")
+NOTI_PROMPT = os.getenv("NOTI_PROMPT")
+NOTI_DESCRIPTION = os.getenv("NOTI_DESCRIPTION")
 
-
+# holds the conversation history to provide Asa with past context
 @dataclass
 class ChatContext:
     history: list[str]
 
 
+#### Base Asa tools ####
 # get the run context
 @function_tool
 async def fetch_conversation_history(
@@ -40,29 +42,47 @@ async def fetch_conversation_history(
     return wrapper.context.history
 
 
+#### Noti asa tools ####
+# send discord noti, most likely have to take a credential as its parameter
+# and return a success or failure boolean; or a HTTP status message
+@function_tool
+async def send_discord_noti():
+    print("Send discord tool has been invoked!")
+    pass
+
+# send a gmail noti; will also most likely take a credential as its parameter
+# and return a success or failure boolean; or a HTTP status message
+@function_tool
+async def send_gmail_noti():
+    print("Send gmail tool has been invoked!")
+
+
 # Going to create my own MCP server to expose required APIs
 # like google calendar, slack,
 async def run(mcp_server: MCPServer):
-    planner_agent = Agent(
+    # send notifications to the user through email and SMS
+    notification_agent = Agent(
+        name="noti_asa", 
+        instructions=NOTI_PROMPT, 
+        tools=[
+            send_discord_noti,
+            send_gmail_noti
+        ],
+        model="gpt-4.1-nano"
+    )
+
+    base_agent = Agent(
         name="Asa",
-        instructions="You are a scheduling assistant. Your job is to list the"
-        "tasks and events of the {{ user }} in the defined {{ date_range }}"
-        "in a clear and concise manner. You should also provide insights as"
-        "to how best complete said tasks. You are also responsible for"
-        "adding and removing tasks from the users schedule when prompted by"
-        "interacting with the provided google calendar tools. When queries"
-        "reference or require past queries, use the fetch_conversation_history tool",
+        instructions=SYSTEM_PROMPT,
         model="gpt-4.1-nano",
         tools=[
             fetch_conversation_history,
         ],
+        handoffs=[notification_agent],
+        handoff_description=NOTI_DESCRIPTION,
         mcp_servers=[mcp_server],
         model_settings=ModelSettings(tool_choice="required"),
     )
-
-    # send notifications to the user through email and SMS
-    notification_agent = Agent(
-        name="noti_asa", instructions="", model="gpt-4.1-nano")
 
     chat_history_list = []
 
@@ -77,7 +97,7 @@ async def run(mcp_server: MCPServer):
         chat_context = ChatContext(history=chat_history_list)
 
         result = await Runner.run(
-            starting_agent=planner_agent,
+            starting_agent=base_agent,
             input=user_input,
             context=chat_context,
         )
