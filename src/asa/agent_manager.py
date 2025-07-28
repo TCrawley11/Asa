@@ -67,7 +67,7 @@ async def run(mcp_server: MCPServer):
     chat_history_list = []
 
     while True:
-        print("=" * 50)
+        print("=" * 150)
         user_input = input("Schedule anything...\n")
         if user_input in ("exit", "goodbye"):
             print("Goodbye!")
